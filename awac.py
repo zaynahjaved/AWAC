@@ -12,7 +12,7 @@ import torch.nn.functional as F
 import os
 import warnings
 from termcolor import colored
-
+import json
 device = torch.device("cpu")
 
 
@@ -238,7 +238,7 @@ class AWAC:
                 "awac_data/ant_off_policy_15_demos_100.npy"),
             'Walker2d-v2': (
                 "awac_data/walker_action_noise_15.npy",
-                "awac_data/walker_off_policy_15_demos_100.npy"),
+                "awac_data/walker_off_policy_15_demos_100.npy")
         }
         if env_name in data_envs:
             print('Loading saved data')
@@ -248,6 +248,13 @@ class AWAC:
                     break
                 data = np.load(file, allow_pickle=True)
                 for demo in data:
+                    for transition in list(zip(demo['observations'], demo['actions'], demo['rewards'],
+                                               demo['next_observations'], demo['terminals'])):
+                        self.replay_buffer.store(*transition)
+        elif env_name == 'push':
+            for file in os.listdir('push_data'):
+                if os.fsdecode(file).endswith('.json'):
+                    demo = json.load(os.fsdecode(file))
                     for transition in list(zip(demo['observations'], demo['actions'], demo['rewards'],
                                                demo['next_observations'], demo['terminals'])):
                         self.replay_buffer.store(*transition)
